@@ -379,7 +379,7 @@ module pcileech_pcie_cfg_a7(
                         rw[175]     <= rw[RWPOS_CFG_CFGSPACE_STATUS_CL_EN]; // cfg_mgmt_byte_en: status register
                     end
 
-                if ((base_address_register_reg == 32'h00000000) | (base_address_register_reg == 32'hFFE00000))
+                if ((base_address_register_reg == 32'h00000000) | (base_address_register_reg == 32'hFFFFC004))
                     if ( ~in_cmd_read & ~in_cmd_write & ~rw[RWPOS_CFG_RD_EN] & ~rw[RWPOS_CFG_WR_EN] & ~rwi_cfg_mgmt_rd_en & ~rwi_cfg_mgmt_wr_en )
                         begin
                             rw[RWPOS_CFG_RD_EN] <= 1'b1;
@@ -394,9 +394,9 @@ module pcileech_pcie_cfg_a7(
                 if ( ctx.cfg_mgmt_rd_wr_done )
                     begin
                         //
-                        // if BAR0 was requested, lets save it.
+                        // if BAR0 was requested, lets save it. // W paste
                         //
-                        if ((base_address_register_reg == 32'h00000000) | (base_address_register_reg == 32'hFFE00000))
+			    if ((base_address_register_reg == 32'h00000000) | (base_address_register_reg == 32'hFFFFC004)) // bro didnt even change the register here 
                             if ((ctx.cfg_mgmt_dwaddr == 8'h04) & rwi_cfg_mgmt_rd_en)
                                     base_address_register_reg <= ctx.cfg_mgmt_do;
 
