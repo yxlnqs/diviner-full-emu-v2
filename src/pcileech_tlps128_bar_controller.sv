@@ -855,9 +855,9 @@ module pcileech_bar_impl_ar9287_wifi(
                     case (({drd_req_addr[31:24], drd_req_addr[23:16], drd_req_addr[15:08], drd_req_addr[07:00]} - (base_address_register & ~32'h4)) & 32'h00FF)
 							8'h00 : begin
 							
-                            rd_rsp_data[7:0]   <= 8'hD8;
-                            rd_rsp_data[15:8]  <= 8'h5E; 
-                            rd_rsp_data[23:16] <= 8'hD3;
+								rd_rsp_data[7:0]   <= 8'h00;  // mac prefix 
+								rd_rsp_data[15:8]  <= 8'hE0;  // mac prefix 
+								rd_rsp_data[23:16] <= 8'h4C;  // mac prefix
                             rd_rsp_data[31:24] <= ((0 + (number) % (15 + 1 - 0)) << 4) | (0 + (number + 3) % (15 + 1 - 0));
 							end
 									8'h04 : begin
