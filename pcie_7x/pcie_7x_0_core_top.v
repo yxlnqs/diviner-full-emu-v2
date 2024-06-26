@@ -58,11 +58,6 @@
 //--------------------------------------------------------------------------------
 
 `timescale 1ps/1ps
-
-(* CORE_GENERATION_INFO = "pcie_7x_0,pcie_7x_v3_3_18,{LINK_CAP_MAX_LINK_SPEED=2,LINK_CAP_MAX_LINK_WIDTH=1,PCIE_CAP_DEVICE_PORT_TYPE=0000,DEV_CAP_MAX_PAYLOAD_SUPPORTED=2,USER_CLK_FREQ=1,REF_CLK_FREQ=0,MSI_CAP_ON=TRUE,MSI_CAP_MULTIMSGCAP=0,MSI_CAP_MULTIMSG_EXTENSION=0,MSIX_CAP_ON=FALSE,TL_TX_RAM_RADDR_LATENCY=0,TL_TX_RAM_RDATA_LATENCY=2,TL_RX_RAM_RADDR_LATENCY=0,TL_RX_RAM_RDATA_LATENCY=2,TL_RX_RAM_WRITE_LATENCY=0,\
-VC0_TX_LASTPACKET=29,VC0_RX_RAM_LIMIT=7FF,VC0_TOTAL_CREDITS_PH=4,VC0_TOTAL_CREDITS_PD=64,VC0_TOTAL_CREDITS_NPH=4,VC0_TOTAL_CREDITS_NPD=8,VC0_TOTAL_CREDITS_CH=72,VC0_TOTAL_CREDITS_CD=850,VC0_CPL_INFINITE=TRUE,DEV_CAP_PHANTOM_FUNCTIONS_SUPPORT=0,DEV_CAP_EXT_TAG_SUPPORTED=TRUE,LINK_STATUS_SLOT_CLOCK_CONFIG=TRUE,DISABLE_LANE_REVERSAL=TRUE,DISABLE_SCRAMBLING=FALSE,DSN_CAP_ON=TRUE,REVISION_ID=02,VC_CAP_ON=FALSE}" *)
-(* DowngradeIPIdentifiedWarnings = "yes" *)
-module pcie_7x_0_core_top # (
 /*
 CFG_DEV_ID list
 0x002E [blacklisted]
@@ -73,27 +68,32 @@ CFG_DEV_ID list
 
 full list: https://github.com/torvalds/linux/blob/master/drivers/net/wireless/ath/ath9k/pci.c#L24
 */
+
+(* CORE_GENERATION_INFO = "pcie_7x_0,pcie_7x_v3_3_18,{LINK_CAP_MAX_LINK_SPEED=2,LINK_CAP_MAX_LINK_WIDTH=1,PCIE_CAP_DEVICE_PORT_TYPE=0000,DEV_CAP_MAX_PAYLOAD_SUPPORTED=2,USER_CLK_FREQ=1,REF_CLK_FREQ=0,MSI_CAP_ON=TRUE,MSI_CAP_MULTIMSGCAP=0,MSI_CAP_MULTIMSG_EXTENSION=0,MSIX_CAP_ON=FALSE,TL_TX_RAM_RADDR_LATENCY=0,TL_TX_RAM_RDATA_LATENCY=2,TL_RX_RAM_RADDR_LATENCY=0,TL_RX_RAM_RDATA_LATENCY=2,TL_RX_RAM_WRITE_LATENCY=0,\
+VC0_TX_LASTPACKET=29,VC0_RX_RAM_LIMIT=7FF,VC0_TOTAL_CREDITS_PH=4,VC0_TOTAL_CREDITS_PD=64,VC0_TOTAL_CREDITS_NPH=4,VC0_TOTAL_CREDITS_NPD=8,VC0_TOTAL_CREDITS_CH=72,VC0_TOTAL_CREDITS_CD=850,VC0_CPL_INFINITE=TRUE,DEV_CAP_PHANTOM_FUNCTIONS_SUPPORT=0,DEV_CAP_EXT_TAG_SUPPORTED=TRUE,LINK_STATUS_SLOT_CLOCK_CONFIG=TRUE,DISABLE_LANE_REVERSAL=TRUE,DISABLE_SCRAMBLING=FALSE,DSN_CAP_ON=TRUE,REVISION_ID=02,VC_CAP_ON=FALSE}" *)
+(* DowngradeIPIdentifiedWarnings = "yes" *)
+module pcie_7x_0_core_top # (
   parameter         CFG_VEND_ID        = 16'h10EC,
-  parameter         CFG_DEV_ID         = 16'h8125,
-  parameter         CFG_REV_ID         =  8'h05,
-  parameter         CFG_SUBSYS_VEND_ID = 16'h1458,
-  parameter         CFG_SUBSYS_ID      = 16'hE000,
+  parameter         CFG_DEV_ID         = 16'h8168,
+  parameter         CFG_REV_ID         =  8'h26,
+  parameter         CFG_SUBSYS_VEND_ID = 16'h1043,
+  parameter         CFG_SUBSYS_ID      = 16'h87C3,
   parameter         PCIE_ID_IF         ="TRUE", 
 
   parameter         EXT_PIPE_SIM = "FALSE",
 
   parameter         ALLOW_X8_GEN2 = "FALSE",
   parameter         PIPE_PIPELINE_STAGES = 1,
-  parameter [11:0]  AER_BASE_PTR = 12'h100,
+  parameter [11:0]  AER_BASE_PTR = 12'h000,
   parameter         AER_CAP_ECRC_CHECK_CAPABLE = "FALSE",
   parameter         AER_CAP_ECRC_GEN_CAPABLE = "FALSE",
   parameter         AER_CAP_MULTIHEADER = "FALSE",
-  parameter [11:0]  AER_CAP_NEXTPTR = 12'h140,
+  parameter [11:0]  AER_CAP_NEXTPTR = 12'h000,
   parameter [23:0]  AER_CAP_OPTIONAL_ERR_SUPPORT = 24'h000000,
-  parameter         AER_CAP_ON = "TRUE",
+  parameter         AER_CAP_ON = "FALSE",
   parameter         AER_CAP_PERMIT_ROOTERR_UPDATE = "FALSE",
 
-  parameter [31:0]  BAR0 = 32'hFFE00000,
+  parameter [31:0]  BAR0 = 32'hFFFFC000,
   parameter [31:0]  BAR1 = 32'h00000000,
   parameter [31:0]  BAR2 = 32'h00000000,
   parameter [31:0]  BAR3 = 32'h00000000,
@@ -102,14 +102,14 @@ full list: https://github.com/torvalds/linux/blob/master/drivers/net/wireless/at
 
   parameter         C_DATA_WIDTH = 64,
   parameter [31:0]  CARDBUS_CIS_POINTER = 32'h00000000,
-  parameter [23:0]  CLASS_CODE = 24'h028000,
+  parameter [23:0]  CLASS_CODE = 24'h020000,
   parameter         CMD_INTX_IMPLEMENTED = "TRUE",
-  parameter         CPL_TIMEOUT_DISABLE_SUPPORTED = "TRUE",
-  parameter [3:0]   CPL_TIMEOUT_RANGES_SUPPORTED = 4'h1,
+  parameter         CPL_TIMEOUT_DISABLE_SUPPORTED = "FALSE",
+  parameter [3:0]   CPL_TIMEOUT_RANGES_SUPPORTED = 4'h2,
 
-  parameter integer DEV_CAP_ENDPOINT_L0S_LATENCY = 3,
-  parameter integer DEV_CAP_ENDPOINT_L1_LATENCY = 6,
-  parameter         DEV_CAP_EXT_TAG_SUPPORTED = "FALSE",
+  parameter integer DEV_CAP_ENDPOINT_L0S_LATENCY = 7,
+  parameter integer DEV_CAP_ENDPOINT_L1_LATENCY = 7,
+  parameter         DEV_CAP_EXT_TAG_SUPPORTED = "TRUE",
   parameter integer DEV_CAP_MAX_PAYLOAD_SUPPORTED = 0,
   parameter integer DEV_CAP_PHANTOM_FUNCTIONS_SUPPORT = 0,
 
@@ -119,20 +119,20 @@ full list: https://github.com/torvalds/linux/blob/master/drivers/net/wireless/at
   parameter         DEV_CAP2_ATOMICOP_ROUTING_SUPPORTED = "FALSE",
   parameter         DEV_CAP2_CAS128_COMPLETER_SUPPORTED = "FALSE",
   parameter [1:0]   DEV_CAP2_TPH_COMPLETER_SUPPORTED = 2'b00,
-  parameter         DEV_CONTROL_EXT_TAG_DEFAULT = "FALSE",
+  parameter         DEV_CONTROL_EXT_TAG_DEFAULT = "TRUE",
 
   parameter         DISABLE_LANE_REVERSAL = "TRUE",
   parameter         DISABLE_RX_POISONED_RESP = "FALSE",
   parameter         DISABLE_SCRAMBLING = "FALSE",
-  parameter [11:0]  DSN_BASE_PTR = 12'h160,
-  parameter [11:0]  DSN_CAP_NEXTPTR = 12'h170,
+  parameter [11:0]  DSN_BASE_PTR = 12'h100,
+  parameter [11:0]  DSN_CAP_NEXTPTR = 12'h10c,
   parameter         DSN_CAP_ON = "TRUE",
 
   parameter [10:0]  ENABLE_MSG_ROUTE = 11'b00000000000,
   parameter         ENABLE_RX_TD_ECRC_TRIM = "FALSE",
   parameter [31:0]  EXPANSION_ROM = 32'h00000000,
-  parameter [5:0]   EXT_CFG_CAP_PTR = 6'h3F,
-  parameter [9:0]   EXT_CFG_XP_CAP_PTR = 10'h3FF,
+  parameter [5:0]   EXT_CFG_CAP_PTR = 6'h0A,
+  parameter [9:0]   EXT_CFG_XP_CAP_PTR = 10'h0A,
   parameter [7:0]   HEADER_TYPE = 8'h00,
   parameter [7:0]   INTERRUPT_PIN = 8'h1,
 
@@ -140,12 +140,12 @@ full list: https://github.com/torvalds/linux/blob/master/drivers/net/wireless/at
   parameter         LINK_CAP_ASPM_OPTIONALITY = "FALSE",
   parameter         LINK_CAP_DLL_LINK_ACTIVE_REPORTING_CAP = "FALSE",
   parameter         LINK_CAP_LINK_BANDWIDTH_NOTIFICATION_CAP = "FALSE",
-  parameter [3:0]   LINK_CAP_MAX_LINK_SPEED = 4'h1,
+  parameter [3:0]   LINK_CAP_MAX_LINK_SPEED = 4'h2,
   parameter [5:0]   LINK_CAP_MAX_LINK_WIDTH = 6'h1,
 
   parameter         LINK_CTRL2_DEEMPHASIS = "FALSE",
   parameter         LINK_CTRL2_HW_AUTONOMOUS_SPEED_DISABLE = "FALSE",
-  parameter [3:0]   LINK_CTRL2_TARGET_LINK_SPEED = 4'h0,
+  parameter [3:0]   LINK_CTRL2_TARGET_LINK_SPEED = 4'h2,
   parameter         LINK_STATUS_SLOT_CLOCK_CONFIG = "TRUE",
 
   parameter [14:0]  LL_ACK_TIMEOUT = 15'h0000,
@@ -160,7 +160,7 @@ full list: https://github.com/torvalds/linux/blob/master/drivers/net/wireless/at
   parameter         MSI_CAP_MULTIMSG_EXTENSION = 0,
   parameter         MSI_CAP_ON = "TRUE",
   parameter         MSI_CAP_PER_VECTOR_MASKING_CAPABLE = "FALSE",
-  parameter         MSI_CAP_64_BIT_ADDR_CAPABLE = "FALSE",
+  parameter         MSI_CAP_64_BIT_ADDR_CAPABLE = "TRUE",
 
   parameter         MSIX_CAP_ON = "FALSE",
   parameter         MSIX_CAP_PBA_BIR = 0,
@@ -169,15 +169,15 @@ full list: https://github.com/torvalds/linux/blob/master/drivers/net/wireless/at
   parameter [28:0]  MSIX_CAP_TABLE_OFFSET = 29'h0,
   parameter [10:0]  MSIX_CAP_TABLE_SIZE = 11'h000,
 
-  parameter [3:0]   PCIE_CAP_DEVICE_PORT_TYPE = 4'h1,
+  parameter [3:0]   PCIE_CAP_DEVICE_PORT_TYPE = 4'h0,
   parameter [7:0]   PCIE_CAP_NEXTPTR = 8'h00,
 
   parameter         PM_CAP_DSI = "FALSE",
-  parameter         PM_CAP_D1SUPPORT = "TRUE",
+  parameter         PM_CAP_D1SUPPORT = "FALSE",
   parameter         PM_CAP_D2SUPPORT = "FALSE",
-  parameter [7:0]   PM_CAP_NEXTPTR = 8'h50,
-  parameter [4:0]   PM_CAP_PMESUPPORT = 5'h0B,
-  parameter         PM_CSR_NOSOFTRST = "FALSE",
+  parameter [7:0]   PM_CAP_NEXTPTR = 8'h48,
+  parameter [4:0]   PM_CAP_PMESUPPORT = 5'h0F,
+  parameter         PM_CSR_NOSOFTRST = "TRUE",
 
   parameter [1:0]   PM_DATA_SCALE0 = 2'h0,
   parameter [1:0]   PM_DATA_SCALE1 = 2'h0,
@@ -242,24 +242,24 @@ full list: https://github.com/torvalds/linux/blob/master/drivers/net/wireless/at
   parameter         USER_CLK_FREQ = 1,
   parameter         USER_CLK2_DIV2 = "FALSE",
 
-  parameter [11:0]  VC_BASE_PTR = 12'h140,
-  parameter [11:0]  VC_CAP_NEXTPTR = 12'h160,
-  parameter         VC_CAP_ON = "TRUE",
+  parameter [11:0]  VC_BASE_PTR = 12'h000,
+  parameter [11:0]  VC_CAP_NEXTPTR = 12'h000,
+  parameter         VC_CAP_ON = "FALSE",
   parameter         VC_CAP_REJECT_SNOOP_TRANSACTIONS = "FALSE",
 
   parameter         VC0_CPL_INFINITE = "TRUE",
-  parameter [12:0]  VC0_RX_RAM_LIMIT = 13'h7FF,
-  parameter         VC0_TOTAL_CREDITS_CD = 850,
+  parameter [12:0]  VC0_RX_RAM_LIMIT = 13'h3FF,
+  parameter         VC0_TOTAL_CREDITS_CD = 370,
   parameter         VC0_TOTAL_CREDITS_CH = 72,
   parameter         VC0_TOTAL_CREDITS_NPH = 4,
   parameter         VC0_TOTAL_CREDITS_NPD = 8,
-  parameter         VC0_TOTAL_CREDITS_PD = 64,
+  parameter         VC0_TOTAL_CREDITS_PD = 32,
   parameter         VC0_TOTAL_CREDITS_PH = 4,
-  parameter         VC0_TX_LASTPACKET = 29,
+  parameter         VC0_TX_LASTPACKET = 31,
 
-  parameter [11:0]  VSEC_BASE_PTR = 12'h170,
+  parameter [11:0]  VSEC_BASE_PTR = 12'h000,
   parameter [11:0]  VSEC_CAP_NEXTPTR = 12'h000,
-  parameter         VSEC_CAP_ON = "TRUE",
+  parameter         VSEC_CAP_ON = "FALSE",
 
   parameter         DISABLE_ASPM_L1_TIMER = "FALSE",
   parameter         DISABLE_BAR_FILTERING = "FALSE",
@@ -273,22 +273,22 @@ full list: https://github.com/torvalds/linux/blob/master/drivers/net/wireless/at
   parameter [4:0]   INFER_EI = 5'h00,
   parameter         IS_SWITCH = "FALSE",
 
-  parameter         LINK_CAP_ASPM_SUPPORT = 3,
+  parameter         LINK_CAP_ASPM_SUPPORT = 1,
   parameter         LINK_CAP_CLOCK_POWER_MANAGEMENT = "FALSE",
-  parameter         LINK_CAP_L0S_EXIT_LATENCY_COMCLK_GEN1 = 3,
-  parameter         LINK_CAP_L0S_EXIT_LATENCY_COMCLK_GEN2 = 3,
-  parameter         LINK_CAP_L0S_EXIT_LATENCY_GEN1 = 3,
-  parameter         LINK_CAP_L0S_EXIT_LATENCY_GEN2 = 3,
-  parameter         LINK_CAP_L1_EXIT_LATENCY_COMCLK_GEN1 = 6,
-  parameter         LINK_CAP_L1_EXIT_LATENCY_COMCLK_GEN2 = 6,
-  parameter         LINK_CAP_L1_EXIT_LATENCY_GEN1 = 6,
-  parameter         LINK_CAP_L1_EXIT_LATENCY_GEN2 = 6,
+  parameter         LINK_CAP_L0S_EXIT_LATENCY_COMCLK_GEN1 = 7,
+  parameter         LINK_CAP_L0S_EXIT_LATENCY_COMCLK_GEN2 = 7,
+  parameter         LINK_CAP_L0S_EXIT_LATENCY_GEN1 = 7,
+  parameter         LINK_CAP_L0S_EXIT_LATENCY_GEN2 = 7,
+  parameter         LINK_CAP_L1_EXIT_LATENCY_COMCLK_GEN1 = 7,
+  parameter         LINK_CAP_L1_EXIT_LATENCY_COMCLK_GEN2 = 7,
+  parameter         LINK_CAP_L1_EXIT_LATENCY_GEN1 = 7,
+  parameter         LINK_CAP_L1_EXIT_LATENCY_GEN2 = 7,
   parameter         LINK_CAP_RSVD_23 = 0,
   parameter         LINK_CONTROL_RCB = 0,
 
-  parameter [7:0]   MSI_BASE_PTR = 8'h50,
+  parameter [7:0]   MSI_BASE_PTR = 8'h48,
   parameter [7:0]   MSI_CAP_ID = 8'h05,
-  parameter [7:0]   MSI_CAP_NEXTPTR = 8'h70,
+  parameter [7:0]   MSI_CAP_NEXTPTR = 8'h60,
   parameter [7:0]   MSIX_BASE_PTR = 8'h9C,
   parameter [7:0]   MSIX_CAP_ID = 8'h11,
   parameter [7:0]   MSIX_CAP_NEXTPTR =8'h00,
@@ -298,7 +298,7 @@ full list: https://github.com/torvalds/linux/blob/master/drivers/net/wireless/at
   parameter         N_FTS_GEN1 = 255,
   parameter         N_FTS_GEN2 = 255,
 
-  parameter [7:0]   PCIE_BASE_PTR = 8'h70,
+  parameter [7:0]   PCIE_BASE_PTR = 8'h60,
   parameter [7:0]   PCIE_CAP_CAPABILITY_ID = 8'h10,
   parameter [3:0]   PCIE_CAP_CAPABILITY_VERSION = 4'h2,
   parameter         PCIE_CAP_ON = "TRUE",
@@ -316,7 +316,7 @@ full list: https://github.com/torvalds/linux/blob/master/drivers/net/wireless/at
   parameter         SHARED_LOGIC_IN_CORE = "FALSE",
 
   parameter [7:0]   PM_BASE_PTR = 8'h40,
-  parameter         PM_CAP_AUXCURRENT = 7,
+  parameter         PM_CAP_AUXCURRENT = 0,
   parameter [7:0]   PM_CAP_ID = 8'h01,
   parameter         PM_CAP_ON = "TRUE",
   parameter         PM_CAP_PME_CLOCK = "FALSE",
@@ -338,7 +338,7 @@ full list: https://github.com/torvalds/linux/blob/master/drivers/net/wireless/at
   parameter         SLOT_CAP_POWER_CONTROLLER_PRESENT = "FALSE",
   parameter         SLOT_CAP_POWER_INDICATOR_PRESENT = "FALSE",
   parameter         SLOT_CAP_SLOT_POWER_LIMIT_SCALE = 0,
-  parameter [7:0]   SLOT_CAP_SLOT_POWER_LIMIT_VALUE = 8'h100,
+  parameter [7:0]   SLOT_CAP_SLOT_POWER_LIMIT_VALUE = 8'h00,
 
   parameter integer SPARE_BIT0 = 0,
 
@@ -367,8 +367,8 @@ full list: https://github.com/torvalds/linux/blob/master/drivers/net/wireless/at
   parameter         CFG_ECRC_ERR_CPLSTAT = 0,
   parameter [7:0]   CAPABILITIES_PTR = 8'h40,
   parameter [6:0]   CRM_MODULE_RSTS = 7'h00,
-  parameter         DEV_CAP_ENABLE_SLOT_PWR_LIMIT_SCALE = "FALSE",
-  parameter         DEV_CAP_ENABLE_SLOT_PWR_LIMIT_VALUE = "FALSE",
+  parameter         DEV_CAP_ENABLE_SLOT_PWR_LIMIT_SCALE = "TRUE",
+  parameter         DEV_CAP_ENABLE_SLOT_PWR_LIMIT_VALUE = "TRUE",
   parameter         DEV_CAP_FUNCTION_LEVEL_RESET_CAPABLE = "FALSE",
   parameter         DEV_CAP_ROLE_BASED_ERROR = "TRUE",
   parameter         DEV_CAP_RSVD_14_12 = 0,
@@ -378,10 +378,10 @@ full list: https://github.com/torvalds/linux/blob/master/drivers/net/wireless/at
 
   parameter [15:0]  VC_CAP_ID = 16'h0002,
   parameter [3:0]   VC_CAP_VERSION = 4'h1,
-  parameter [15:0]  VSEC_CAP_HDR_ID = 16'h0000,
-  parameter [11:0]  VSEC_CAP_HDR_LENGTH = 12'h000,
-  parameter [3:0]   VSEC_CAP_HDR_REVISION = 4'h0,
-  parameter [15:0]  VSEC_CAP_ID = 16'h0004,
+  parameter [15:0]  VSEC_CAP_HDR_ID = 16'h1234,
+  parameter [11:0]  VSEC_CAP_HDR_LENGTH = 12'h018,
+  parameter [3:0]   VSEC_CAP_HDR_REVISION = 4'h1,
+  parameter [15:0]  VSEC_CAP_ID = 16'h000B,
   parameter         VSEC_CAP_IS_LINK_VISIBLE = "TRUE",
   parameter [3:0]   VSEC_CAP_VERSION = 4'h1,
 
@@ -390,7 +390,7 @@ full list: https://github.com/torvalds/linux/blob/master/drivers/net/wireless/at
   parameter         DISABLE_PPM_FILTER = "FALSE",
   parameter         ENDEND_TLP_PREFIX_FORWARDING_SUPPORTED = "FALSE",
   parameter         INTERRUPT_STAT_AUTO = "TRUE",
-  parameter         MPS_FORCE = "FALSE",
+  parameter         MPS_FORCE = "TRUE",
   parameter [14:0]  PM_ASPML0S_TIMEOUT = 15'h0000,
   parameter         PM_ASPML0S_TIMEOUT_EN = "FALSE",
   parameter         PM_ASPML0S_TIMEOUT_FUNC = 0,
@@ -1641,7 +1641,7 @@ pcie_7x_0_pcie_top # (
     .cfg_pm_halt_aspm_l1_n                      ( ~cfg_pm_halt_aspm_l1  ),
     .cfg_pm_force_state_en_n                    ( ~cfg_pm_force_state_en),
     .cfg_pm_force_state                         ( cfg_pm_force_state ),
-    .cfg_force_mps                              ( 3'b0 ),
+    .cfg_force_mps                              ( 3'b000 ),
     .cfg_force_common_clock_off                 ( 1'b0 ),
     .cfg_force_extended_sync_on                 ( 1'b0 ),
     .cfg_port_number                            ( 8'b0 ),
@@ -2178,3 +2178,4 @@ pcie_7x_0_gt_top #(
 
 
 endmodule
+
