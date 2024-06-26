@@ -1,0 +1,1 @@
+D:\Xilinx\Vivado\2023.2\bin\vivado -source vivado_generate_project_m2.tcl -notrace -nolog -nojournal
