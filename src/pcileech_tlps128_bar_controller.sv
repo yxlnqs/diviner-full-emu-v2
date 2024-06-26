@@ -798,8 +798,9 @@ endmodule
 
 // ------------------------------------------------------------------------
 // pcileech wifi BAR implementation
-// Works with Qualcomm Atheros AR9287 chip wifi adapters
+// Works with Qualcomm Atheros AR9287 chip wifi adapters 
 // ------------------------------------------------------------------------
+// W paste 
 module pcileech_bar_impl_ar9287_wifi(
     input               rst,
     input               clk,
@@ -814,24 +815,24 @@ module pcileech_bar_impl_ar9287_wifi(
     input               rd_req_valid,
     input  [31:0]       base_address_register,
     // outgoing BAR read replies:
-    output bit [87:0]   rd_rsp_ctx,
-    output bit [31:0]   rd_rsp_data,
-    output bit          rd_rsp_valid
+    output reg [87:0]   rd_rsp_ctx,
+    output reg [31:0]   rd_rsp_data,
+    output reg          rd_rsp_valid
 );
 
-    bit [87:0]      drd_req_ctx;
-    bit [31:0]      drd_req_addr;
-    bit             drd_req_valid;
+    reg [87:0]      drd_req_ctx;
+    reg [31:0]      drd_req_addr;
+    reg             drd_req_valid;
 
-    bit [31:0]      dwr_addr;
-    bit [31:0]      dwr_data;
-    bit             dwr_valid;
+    reg [31:0]      dwr_addr;
+    reg [31:0]      dwr_data;
+    reg             dwr_valid;
 
-    bit [31:0]      data_32;
+    reg [31:0]      data_32;
 
     time number = 0;
 
-    always @ ( posedge clk ) begin
+    always @ (posedge clk) begin
         if (rst)
             number <= 0;
 
@@ -846,105 +847,560 @@ module pcileech_bar_impl_ar9287_wifi(
         dwr_data        <= wr_data;
 
         if (drd_req_valid) begin
-            // Special cases for addresses 0x0500, 0x0504, and 0x0508
             case (({drd_req_addr[31:24], drd_req_addr[23:16], drd_req_addr[15:08], drd_req_addr[07:00]} - (base_address_register & ~32'h4)) & 32'hFFFF)
-                32'h0538 : rd_rsp_data <= 32'h00000040;
-                32'h0548 : rd_rsp_data <= 32'h00001900;
-                32'h0558 : rd_rsp_data <= 32'h00005000;
-                32'h083C : rd_rsp_data <= 32'h00004000;
-                32'h0848 : rd_rsp_data <= 32'h00002400;
-                32'h0858 : rd_rsp_data <= 32'h00005000;
-                default : begin
+				32'h0500 : rd_rsp_data <= 32'h0F710E00; // <- specal address register 
+                32'h0504 : rd_rsp_data <= 32'h0000F3EA; // <- specal address register 
+                32'h0508 : rd_rsp_data <= 32'h0A580040; // <- specal address register 
+			    default : begin
                     case (({drd_req_addr[31:24], drd_req_addr[23:16], drd_req_addr[15:08], drd_req_addr[07:00]} - (base_address_register & ~32'h4)) & 32'h00FF)
-                        8'h00 : begin
+							8'h00 : begin
+							
                             rd_rsp_data[7:0]   <= 8'hD8;
-                            rd_rsp_data[15:8]  <= 8'h5E; // Fixed first 6 digits (1F:AA)
+                            rd_rsp_data[15:8]  <= 8'h5E; 
                             rd_rsp_data[23:16] <= 8'hD3;
-                            //rd_rsp_data[31:24] <= 8'hAE;
                             rd_rsp_data[31:24] <= ((0 + (number) % (15 + 1 - 0)) << 4) | (0 + (number + 3) % (15 + 1 - 0));
-                        end
-                        8'h04 : begin
-                            //rd_rsp_data[7:0]   <= 8'h87;
-                            //rd_rsp_data[15:8]  <= 8'h69;
-                            rd_rsp_data[7:0]   <= ((0 + (number + 6) % (15 + 1 - 0)) << 4) | (0 + (number + 9) % (15 + 1 - 0));
-                            rd_rsp_data[15:8]  <= ((0 + (number + 12) % (15 + 1 - 0)) << 4) | (0 + (number + 15) % (15 + 1 - 0));
-                            rd_rsp_data[31:16] <= 16'h0000;
-                        end
-                        /*8'h00 : rd_rsp_data <= 32'h215DF02C;
-                        8'h04 : rd_rsp_data <= 32'h0000046C;*/
-                        8'h08 : rd_rsp_data <= 32'h02480040;
-                        8'h0C : rd_rsp_data <= 32'h80812280;
-                        8'h10 : rd_rsp_data <= 32'hBEC02C00;
-                        8'h14 : rd_rsp_data <= 32'h00000000;
-                        8'h18 : rd_rsp_data <= 32'h00460842;
-                        8'h1C : rd_rsp_data <= 32'h00000000;
-                        8'h20 : rd_rsp_data <= 32'hBEBF9000;
-                        8'h24 : rd_rsp_data <= 32'h00000000;
-                        8'h28 : rd_rsp_data <= 32'hBEBF5000;
-                        8'h2C : rd_rsp_data <= 32'h00000000;
-                        8'h30 : rd_rsp_data <= 32'h00000000;
-                        8'h34 : rd_rsp_data <= 32'h0C000000;
-                        8'h38 : rd_rsp_data <= 32'h00000000;
-                        8'h3C : rd_rsp_data <= 32'h00000115;
-                        8'h40 : rd_rsp_data <= 32'h57100F00;
-                        8'h44 : rd_rsp_data <= 32'h00024F0E;
-                        8'h48 : rd_rsp_data <= 32'h00000000;
-                        8'h4C : rd_rsp_data <= 32'h00000000;
-                        8'h50 : rd_rsp_data <= 32'h3CCF0010;
-                        8'h54 : rd_rsp_data <= 32'h01021160;
-                        8'h58 : rd_rsp_data <= 32'h00000000;
-                        8'h5C : rd_rsp_data <= 32'h00000000;
-                        8'h60 : rd_rsp_data <= 32'h00000000;
-                        8'h64 : rd_rsp_data <= 32'h00500000;
-                        8'h68 : rd_rsp_data <= 32'h0000F108;
-                        8'h6C : rd_rsp_data <= 32'hF0C000F3;
-                        8'h70 : rd_rsp_data <= 32'h00010031;
-                        8'h74 : rd_rsp_data <= 32'h0000F0DC;
-                        8'h78 : rd_rsp_data <= 32'h00000007;
-                        8'h7C : rd_rsp_data <= 32'h00100000;
-                        8'h80 : rd_rsp_data <= 32'h0004854A;
-                        8'h84 : rd_rsp_data <= 32'h00000000;
-                        8'h88 : rd_rsp_data <= 32'h00000000;
-                        8'h8C : rd_rsp_data <= 32'h00000000;
-                        8'h90 : rd_rsp_data <= 32'h00000000;
-                        8'h94 : rd_rsp_data <= 32'h00000000;
-                        8'h98 : rd_rsp_data <= 32'h00000000;
-                        8'h9C : rd_rsp_data <= 32'h00000000;
-                        8'hA0 : rd_rsp_data <= 32'h00000000;
-                        8'hA4 : rd_rsp_data <= 32'h00000000;
-                        8'hA8 : rd_rsp_data <= 32'h00000000;
-                        8'hAC : rd_rsp_data <= 32'h00000000;
-                        8'hB0 : rd_rsp_data <= 32'h00000001;
-                        8'hB4 : rd_rsp_data <= 32'h00000000;
-                        8'hB8 : rd_rsp_data <= 32'hD20179AD;
-                        8'hBC : rd_rsp_data <= 32'h00000000;
-                        8'hC0 : rd_rsp_data <= 32'h00000000;
-                        8'hC4 : rd_rsp_data <= 32'h00000000;
-                        8'hC8 : rd_rsp_data <= 32'h00000000;
-                        8'hCC : rd_rsp_data <= 32'h00000000;
-                        8'hD0 : rd_rsp_data <= 32'h320000E1;
-                        8'hD4 : rd_rsp_data <= 32'h0000000E;
-                        8'hD8 : rd_rsp_data <= 32'h05F30000;
-                        8'hDC : rd_rsp_data <= 32'h0096FBFF;
-                        8'hE0 : rd_rsp_data <= 32'h00002040;
-                        8'hE4 : rd_rsp_data <= 32'hBEA63000;
-                        8'hE8 : rd_rsp_data <= 32'h00000000;
-                        8'hEC : rd_rsp_data <= 32'h0000003F;
-                        8'hF0 : rd_rsp_data <= 32'h0040003F;
-                        8'hF4 : rd_rsp_data <= 32'h00000000;
-                        8'hF8 : rd_rsp_data <= 32'h00000003;
-                        8'hFC : rd_rsp_data <= 32'h00000000;
-                        default : rd_rsp_data <= 32'h00000000;  // default value: 0xDEADBEEF
+							end
+									8'h04 : begin
+									rd_rsp_data[7:0]   <= ((0 + (number + 6) % (15 + 1 - 0)) << 4) | (0 + (number + 9) % (15 + 1 - 0));
+									rd_rsp_data[15:8]  <= ((0 + (number + 12) % (15 + 1 - 0)) << 4) | (0 + (number + 15) % (15 + 1 - 0));
+									rd_rsp_data[31:16] <= 16'h0000;
+									end
+			
+              /* 16'h0000 : rd_rsp_data <= 32'h0F710E00;
+                 16'h0004 : rd_rsp_data <= 32'h0000F3EA; */
+                16'h0008 : rd_rsp_data <= 32'h0A580040;
+                16'h000C : rd_rsp_data <= 32'h00A12A80;
+                16'h0010 : rd_rsp_data <= 32'hCCF61C00;
+                16'h0018 : rd_rsp_data <= 32'h00060428;
+                16'h0020 : rd_rsp_data <= 32'hCCF58000;
+                16'h0028 : rd_rsp_data <= 32'hCCF54000;
+                16'h0034 : rd_rsp_data <= 32'h0C000000;
+                16'h003C : rd_rsp_data <= 32'h00000115;
+                16'h0040 : rd_rsp_data <= 32'h57100F00;
+                16'h0044 : rd_rsp_data <= 32'h00024F0E;
+                16'h0050 : rd_rsp_data <= 32'h38CF0010;
+                16'h0054 : rd_rsp_data <= 32'h01021160;
+                16'h0064 : rd_rsp_data <= 32'h00500000;
+                16'h0068 : rd_rsp_data <= 32'h0000F108;
+                16'h006C : rd_rsp_data <= 32'hF08000F3;
+                16'h0070 : rd_rsp_data <= 32'h001F0021;
+                16'h0074 : rd_rsp_data <= 32'h0000F0DC;
+                16'h0078 : rd_rsp_data <= 32'h00000007;
+                16'h007C : rd_rsp_data <= 32'h00120000;
+                16'h0080 : rd_rsp_data <= 32'h0004854A;
+                16'h00B0 : rd_rsp_data <= 32'h00000001;
+                16'h00B8 : rd_rsp_data <= 32'hD20179AD;
+                16'h00D0 : rd_rsp_data <= 32'h32000021;
+                16'h00D4 : rd_rsp_data <= 32'h0000000E;
+                16'h00D8 : rd_rsp_data <= 32'h05F30000;
+                16'h00DC : rd_rsp_data <= 32'h00DCFFE3;
+                16'h00E0 : rd_rsp_data <= 32'h00002040;
+                16'h00E4 : rd_rsp_data <= 32'hCCF51000;
+                16'h00EC : rd_rsp_data <= 32'h0000003F;
+                16'h00F0 : rd_rsp_data <= 32'h0000003F;
+                16'h00F8 : rd_rsp_data <= 32'h00000003; // ￬
+                16'h0100 : rd_rsp_data <= 32'h0F710E00;
+                16'h0104 : rd_rsp_data <= 32'h0000F3EA;
+                16'h0108 : rd_rsp_data <= 32'h0A580040;
+                16'h010C : rd_rsp_data <= 32'h00A12A80;
+                16'h0110 : rd_rsp_data <= 32'hCCF61C00;
+                16'h0118 : rd_rsp_data <= 32'h00060428;
+                16'h0120 : rd_rsp_data <= 32'hCCF58000;
+                16'h0128 : rd_rsp_data <= 32'hCCF54000;
+                16'h0134 : rd_rsp_data <= 32'h0C000000;
+                16'h013C : rd_rsp_data <= 32'h00000115;
+                16'h0140 : rd_rsp_data <= 32'h57100F00;
+                16'h0144 : rd_rsp_data <= 32'h00024F0E;
+                16'h0150 : rd_rsp_data <= 32'h38CF0010;
+                16'h0154 : rd_rsp_data <= 32'h01021160;
+                16'h0164 : rd_rsp_data <= 32'h00500000;
+                16'h0168 : rd_rsp_data <= 32'h0000F108;
+                16'h016C : rd_rsp_data <= 32'hF08000F3;
+                16'h0170 : rd_rsp_data <= 32'h001F0021;
+                16'h0174 : rd_rsp_data <= 32'h0000F0DC;
+                16'h0178 : rd_rsp_data <= 32'h00000007;
+                16'h017C : rd_rsp_data <= 32'h00120000;
+                16'h0180 : rd_rsp_data <= 32'h0004854A;
+                16'h01B0 : rd_rsp_data <= 32'h00000001;
+                16'h01B8 : rd_rsp_data <= 32'hD20179AD;
+                16'h01D0 : rd_rsp_data <= 32'h32000021;
+                16'h01D4 : rd_rsp_data <= 32'h0000000E;
+                16'h01D8 : rd_rsp_data <= 32'h05F30000;
+                16'h01DC : rd_rsp_data <= 32'h00DCFFE3;
+                16'h01E0 : rd_rsp_data <= 32'h00002040;
+                16'h01E4 : rd_rsp_data <= 32'hCCF51000;
+                16'h01EC : rd_rsp_data <= 32'h0000003F;
+                16'h01F0 : rd_rsp_data <= 32'h0000003F;
+                16'h01F8 : rd_rsp_data <= 32'h00000003;
+                16'h0200 : rd_rsp_data <= 32'h0F710E00;
+                16'h0204 : rd_rsp_data <= 32'h0000F3EA;
+                16'h0208 : rd_rsp_data <= 32'h0A580040;
+                16'h020C : rd_rsp_data <= 32'h00A12A80;
+                16'h0210 : rd_rsp_data <= 32'hCCF61C00;
+                16'h0218 : rd_rsp_data <= 32'h00060428;
+                16'h0220 : rd_rsp_data <= 32'hCCF58000;
+                16'h0228 : rd_rsp_data <= 32'hCCF54000;
+                16'h0234 : rd_rsp_data <= 32'h0C000000;
+                16'h023C : rd_rsp_data <= 32'h00000115;
+                16'h0240 : rd_rsp_data <= 32'h57100F00;
+                16'h0244 : rd_rsp_data <= 32'h00024F0E;
+                16'h0250 : rd_rsp_data <= 32'h38CF0010;
+                16'h0254 : rd_rsp_data <= 32'h01021160;
+                16'h0264 : rd_rsp_data <= 32'h00500000;
+                16'h0268 : rd_rsp_data <= 32'h0000F108;
+                16'h026C : rd_rsp_data <= 32'hF08000F3;
+                16'h0270 : rd_rsp_data <= 32'h001F0021;
+                16'h0274 : rd_rsp_data <= 32'h0000F0DC;
+                16'h0278 : rd_rsp_data <= 32'h00000007;
+                16'h027C : rd_rsp_data <= 32'h00120000;
+                16'h0280 : rd_rsp_data <= 32'h0004854A;
+                16'h02B0 : rd_rsp_data <= 32'h00000001;
+                16'h02B8 : rd_rsp_data <= 32'hD20179AD;
+                16'h02D0 : rd_rsp_data <= 32'h32000021;
+                16'h02D4 : rd_rsp_data <= 32'h0000000E;
+                16'h02D8 : rd_rsp_data <= 32'h05F30000;
+                16'h02DC : rd_rsp_data <= 32'h00DCFFE3;
+                16'h02E0 : rd_rsp_data <= 32'h00002040;
+                16'h02E4 : rd_rsp_data <= 32'hCCF51000;
+                16'h02EC : rd_rsp_data <= 32'h0000003F;
+                16'h02F0 : rd_rsp_data <= 32'h0000003F;
+                16'h02F8 : rd_rsp_data <= 32'h00000003;
+                16'h0300 : rd_rsp_data <= 32'h0F710E00;
+                16'h0304 : rd_rsp_data <= 32'h0000F3EA;
+                16'h0308 : rd_rsp_data <= 32'h0A580040;
+                16'h030C : rd_rsp_data <= 32'h00A12A80;
+                16'h0310 : rd_rsp_data <= 32'hCCF61C00;
+                16'h0318 : rd_rsp_data <= 32'h00060428;
+                16'h0320 : rd_rsp_data <= 32'hCCF58000;
+                16'h0328 : rd_rsp_data <= 32'hCCF54000;
+                16'h0334 : rd_rsp_data <= 32'h0C000000;
+                16'h033C : rd_rsp_data <= 32'h00000115;
+                16'h0340 : rd_rsp_data <= 32'h57100F00;
+                16'h0344 : rd_rsp_data <= 32'h00024F0E;
+                16'h0350 : rd_rsp_data <= 32'h38CF0010;
+                16'h0354 : rd_rsp_data <= 32'h01021160;
+                16'h0364 : rd_rsp_data <= 32'h00500000;
+                16'h0368 : rd_rsp_data <= 32'h0000F108;
+                16'h036C : rd_rsp_data <= 32'hF08000F3;
+                16'h0370 : rd_rsp_data <= 32'h001F0021;
+                16'h0374 : rd_rsp_data <= 32'h0000F0DC;
+                16'h0378 : rd_rsp_data <= 32'h00000007;
+                16'h037C : rd_rsp_data <= 32'h00120000;
+                16'h0380 : rd_rsp_data <= 32'h0004854A;
+                16'h03B0 : rd_rsp_data <= 32'h00000001;
+                16'h03B8 : rd_rsp_data <= 32'hD20179AD;
+                16'h03D0 : rd_rsp_data <= 32'h32000021;
+                16'h03D4 : rd_rsp_data <= 32'h0000000E;
+                16'h03D8 : rd_rsp_data <= 32'h05F30000;
+                16'h03DC : rd_rsp_data <= 32'h00DCFFE3;
+                16'h03E0 : rd_rsp_data <= 32'h00002040;
+                16'h03E4 : rd_rsp_data <= 32'hCCF51000;
+                16'h03EC : rd_rsp_data <= 32'h0000003F;
+                16'h03F0 : rd_rsp_data <= 32'h0000003F;
+                16'h03F8 : rd_rsp_data <= 32'h00000003;
+                16'h0400 : rd_rsp_data <= 32'h0F710E00;
+                16'h0404 : rd_rsp_data <= 32'h0000F3EA;
+                16'h0408 : rd_rsp_data <= 32'h0A580040;
+                16'h040C : rd_rsp_data <= 32'h00A12A80;
+                16'h0410 : rd_rsp_data <= 32'hCCF61C00;
+                16'h0418 : rd_rsp_data <= 32'h00060428;
+                16'h0420 : rd_rsp_data <= 32'hCCF58000;
+                16'h0428 : rd_rsp_data <= 32'hCCF54000;
+                16'h0434 : rd_rsp_data <= 32'h0C000000;
+                16'h043C : rd_rsp_data <= 32'h00000115;
+                16'h0440 : rd_rsp_data <= 32'h57100F00;
+                16'h0444 : rd_rsp_data <= 32'h00024F0E;
+                16'h0450 : rd_rsp_data <= 32'h38CF0010;
+                16'h0454 : rd_rsp_data <= 32'h01021160;
+                16'h0464 : rd_rsp_data <= 32'h00500000;
+                16'h0468 : rd_rsp_data <= 32'h0000F108;
+                16'h046C : rd_rsp_data <= 32'hF08000F3;
+                16'h0470 : rd_rsp_data <= 32'h001F0021;
+                16'h0474 : rd_rsp_data <= 32'h0000F0DC;
+                16'h0478 : rd_rsp_data <= 32'h00000007;
+                16'h047C : rd_rsp_data <= 32'h00120000;
+                16'h0480 : rd_rsp_data <= 32'h0004854A;
+                16'h04B0 : rd_rsp_data <= 32'h00000001;
+                16'h04B8 : rd_rsp_data <= 32'hD20179AD;
+                16'h04D0 : rd_rsp_data <= 32'h32000021;
+                16'h04D4 : rd_rsp_data <= 32'h0000000E;
+                16'h04D8 : rd_rsp_data <= 32'h05F30000;
+                16'h04DC : rd_rsp_data <= 32'h00DCFFE3;
+                16'h04E0 : rd_rsp_data <= 32'h00002040;
+                16'h04E4 : rd_rsp_data <= 32'hCCF51000;
+                16'h04EC : rd_rsp_data <= 32'h0000003F;
+                16'h04F0 : rd_rsp_data <= 32'h0000003F;
+                16'h04F8 : rd_rsp_data <= 32'h00000003;
+                16'h050C : rd_rsp_data <= 32'h00A12A80;
+                16'h0510 : rd_rsp_data <= 32'hCCF61C00;
+                16'h0518 : rd_rsp_data <= 32'h00060428;
+                16'h0520 : rd_rsp_data <= 32'hCCF58000;
+                16'h0528 : rd_rsp_data <= 32'hCCF54000;
+                16'h0534 : rd_rsp_data <= 32'h0C000000;
+                16'h053C : rd_rsp_data <= 32'h00000115;
+                16'h0540 : rd_rsp_data <= 32'h57100F00;
+                16'h0544 : rd_rsp_data <= 32'h00024F0E;
+                16'h0550 : rd_rsp_data <= 32'h38CF0010;
+                16'h0554 : rd_rsp_data <= 32'h01021160;
+                16'h0564 : rd_rsp_data <= 32'h00500000;
+                16'h0568 : rd_rsp_data <= 32'h0000F108;
+                16'h056C : rd_rsp_data <= 32'hF08000F3;
+                16'h0570 : rd_rsp_data <= 32'h001F0021;
+                16'h0574 : rd_rsp_data <= 32'h0000F0DC;
+                16'h0578 : rd_rsp_data <= 32'h00000007;
+                16'h057C : rd_rsp_data <= 32'h00120000;
+                16'h0580 : rd_rsp_data <= 32'h0004854A;
+                16'h05B0 : rd_rsp_data <= 32'h00000001;
+                16'h05B8 : rd_rsp_data <= 32'hD20179AD;
+                16'h05D0 : rd_rsp_data <= 32'h32000021;
+                16'h05D4 : rd_rsp_data <= 32'h0000000E;
+                16'h05D8 : rd_rsp_data <= 32'h05F30000;
+                16'h05DC : rd_rsp_data <= 32'h00DCFFE3;
+                16'h05E0 : rd_rsp_data <= 32'h00002040;
+                16'h05E4 : rd_rsp_data <= 32'hCCF51000;
+                16'h05EC : rd_rsp_data <= 32'h0000003F;
+                16'h05F0 : rd_rsp_data <= 32'h0000003F;
+                16'h05F8 : rd_rsp_data <= 32'h00000003;
+                16'h0600 : rd_rsp_data <= 32'h0F710E00;
+                16'h0604 : rd_rsp_data <= 32'h0000F3EA;
+                16'h0608 : rd_rsp_data <= 32'h0A580040;
+                16'h060C : rd_rsp_data <= 32'h00A12A80;
+                16'h0610 : rd_rsp_data <= 32'hCCF61C00;
+                16'h0618 : rd_rsp_data <= 32'h00060428;
+                16'h0620 : rd_rsp_data <= 32'hCCF58000;
+                16'h0628 : rd_rsp_data <= 32'hCCF54000;
+                16'h0634 : rd_rsp_data <= 32'h0C000000;
+                16'h063C : rd_rsp_data <= 32'h00000115;
+                16'h0640 : rd_rsp_data <= 32'h57100F00;
+                16'h0644 : rd_rsp_data <= 32'h00024F0E;
+                16'h0650 : rd_rsp_data <= 32'h38CF0010;
+                16'h0654 : rd_rsp_data <= 32'h01021160;
+                16'h0664 : rd_rsp_data <= 32'h00500000;
+                16'h0668 : rd_rsp_data <= 32'h0000F108;
+                16'h066C : rd_rsp_data <= 32'hF08000F3;
+                16'h0670 : rd_rsp_data <= 32'h001F0021;
+                16'h0674 : rd_rsp_data <= 32'h0000F0DC;
+                16'h0678 : rd_rsp_data <= 32'h00000007;
+                16'h067C : rd_rsp_data <= 32'h00120000;
+                16'h0680 : rd_rsp_data <= 32'h0004854A;
+                16'h06B0 : rd_rsp_data <= 32'h00000001;
+                16'h06B8 : rd_rsp_data <= 32'hD20179AD;
+                16'h06D0 : rd_rsp_data <= 32'h32000021;
+                16'h06D4 : rd_rsp_data <= 32'h0000000E;
+                16'h06D8 : rd_rsp_data <= 32'h05F30000;
+                16'h06DC : rd_rsp_data <= 32'h00DCFFE3;
+                16'h06E0 : rd_rsp_data <= 32'h00002040;
+                16'h06E4 : rd_rsp_data <= 32'hCCF51000;
+                16'h06EC : rd_rsp_data <= 32'h0000003F;
+                16'h06F0 : rd_rsp_data <= 32'h0000003F;
+                16'h06F8 : rd_rsp_data <= 32'h00000003;
+                16'h0700 : rd_rsp_data <= 32'h0F710E00;
+                16'h0704 : rd_rsp_data <= 32'h0000F3EA;
+                16'h0708 : rd_rsp_data <= 32'h0A580040;
+                16'h070C : rd_rsp_data <= 32'h00A12A80;
+                16'h0710 : rd_rsp_data <= 32'hCCF61C00;
+                16'h0718 : rd_rsp_data <= 32'h00060428;
+                16'h0720 : rd_rsp_data <= 32'hCCF58000;
+                16'h0728 : rd_rsp_data <= 32'hCCF54000;
+                16'h0734 : rd_rsp_data <= 32'h0C000000;
+                16'h073C : rd_rsp_data <= 32'h00000115;
+                16'h0740 : rd_rsp_data <= 32'h57100F00;
+                16'h0744 : rd_rsp_data <= 32'h00024F0E;
+                16'h0750 : rd_rsp_data <= 32'h38CF0010;
+                16'h0754 : rd_rsp_data <= 32'h01021160;
+                16'h0764 : rd_rsp_data <= 32'h00500000;
+                16'h0768 : rd_rsp_data <= 32'h0000F108;
+                16'h076C : rd_rsp_data <= 32'hF08000F3;
+                16'h0770 : rd_rsp_data <= 32'h001F0021;
+                16'h0774 : rd_rsp_data <= 32'h0000F0DC;
+                16'h0778 : rd_rsp_data <= 32'h00000007;
+                16'h077C : rd_rsp_data <= 32'h00120000;
+                16'h0780 : rd_rsp_data <= 32'h0004854A;
+                16'h07B0 : rd_rsp_data <= 32'h00000001;
+                16'h07B8 : rd_rsp_data <= 32'hD20179AD;
+                16'h07D0 : rd_rsp_data <= 32'h32000021;
+                16'h07D4 : rd_rsp_data <= 32'h0000000E;
+                16'h07D8 : rd_rsp_data <= 32'h05F30000;
+                16'h07DC : rd_rsp_data <= 32'h00DCFFE3;
+                16'h07E0 : rd_rsp_data <= 32'h00002040;
+                16'h07E4 : rd_rsp_data <= 32'hCCF51000;
+                16'h07EC : rd_rsp_data <= 32'h0000003F;
+                16'h07F0 : rd_rsp_data <= 32'h0000003F;
+                16'h07F8 : rd_rsp_data <= 32'h00000003;
+                16'h0800 : rd_rsp_data <= 32'h0F710E00;
+                16'h0804 : rd_rsp_data <= 32'h0000F3EA;
+                16'h0808 : rd_rsp_data <= 32'h0A580040;
+                16'h080C : rd_rsp_data <= 32'h00A12A80;
+                16'h0810 : rd_rsp_data <= 32'hCCF61C00;
+                16'h0818 : rd_rsp_data <= 32'h00060428;
+                16'h0820 : rd_rsp_data <= 32'hCCF58000;
+                16'h0828 : rd_rsp_data <= 32'hCCF54000;
+                16'h0834 : rd_rsp_data <= 32'h0C000000;
+                16'h083C : rd_rsp_data <= 32'h00000115;
+                16'h0840 : rd_rsp_data <= 32'h57100F00;
+                16'h0844 : rd_rsp_data <= 32'h00024F0E;
+                16'h0850 : rd_rsp_data <= 32'h38CF0010;
+                16'h0854 : rd_rsp_data <= 32'h01021160;
+                16'h0864 : rd_rsp_data <= 32'h00500000;
+                16'h0868 : rd_rsp_data <= 32'h0000F108;
+                16'h086C : rd_rsp_data <= 32'hF08000F3;
+                16'h0870 : rd_rsp_data <= 32'h001F0021;
+                16'h0874 : rd_rsp_data <= 32'h0000F0DC;
+                16'h0878 : rd_rsp_data <= 32'h00000007;
+                16'h087C : rd_rsp_data <= 32'h00120000;
+                16'h0880 : rd_rsp_data <= 32'h0004854A;
+                16'h08B0 : rd_rsp_data <= 32'h00000001;
+                16'h08B8 : rd_rsp_data <= 32'hD20179AD;
+                16'h08D0 : rd_rsp_data <= 32'h32000021;
+                16'h08D4 : rd_rsp_data <= 32'h0000000E;
+                16'h08D8 : rd_rsp_data <= 32'h05F30000;
+                16'h08DC : rd_rsp_data <= 32'h00DCFFE3;
+                16'h08E0 : rd_rsp_data <= 32'h00002040;
+                16'h08E4 : rd_rsp_data <= 32'hCCF51000;
+                16'h08EC : rd_rsp_data <= 32'h0000003F;
+                16'h08F0 : rd_rsp_data <= 32'h0000003F;
+                16'h08F8 : rd_rsp_data <= 32'h00000003;
+                16'h0900 : rd_rsp_data <= 32'h0F710E00;
+                16'h0904 : rd_rsp_data <= 32'h0000F3EA;
+                16'h0908 : rd_rsp_data <= 32'h0A580040;
+                16'h090C : rd_rsp_data <= 32'h00A12A80;
+                16'h0910 : rd_rsp_data <= 32'hCCF61C00;
+                16'h0918 : rd_rsp_data <= 32'h00060428;
+                16'h0920 : rd_rsp_data <= 32'hCCF58000;
+                16'h0928 : rd_rsp_data <= 32'hCCF54000;
+                16'h0934 : rd_rsp_data <= 32'h0C000000;
+                16'h093C : rd_rsp_data <= 32'h00000115;
+                16'h0940 : rd_rsp_data <= 32'h57100F00;
+                16'h0944 : rd_rsp_data <= 32'h00024F0E;
+                16'h0950 : rd_rsp_data <= 32'h38CF0010;
+                16'h0954 : rd_rsp_data <= 32'h01021160;
+                16'h0964 : rd_rsp_data <= 32'h00500000;
+                16'h0968 : rd_rsp_data <= 32'h0000F108;
+                16'h096C : rd_rsp_data <= 32'hF08000F3;
+                16'h0970 : rd_rsp_data <= 32'h001F0021;
+                16'h0974 : rd_rsp_data <= 32'h0000F0DC;
+                16'h0978 : rd_rsp_data <= 32'h00000007;
+                16'h097C : rd_rsp_data <= 32'h00120000;
+                16'h0980 : rd_rsp_data <= 32'h0004854A;
+                16'h09B0 : rd_rsp_data <= 32'h00000001;
+                16'h09B8 : rd_rsp_data <= 32'hD20179AD;
+                16'h09D0 : rd_rsp_data <= 32'h32000021;
+                16'h09D4 : rd_rsp_data <= 32'h0000000E;
+                16'h09D8 : rd_rsp_data <= 32'h05F30000;
+                16'h09DC : rd_rsp_data <= 32'h00DCFFE3;
+                16'h09E0 : rd_rsp_data <= 32'h00002040;
+                16'h09E4 : rd_rsp_data <= 32'hCCF51000;
+                16'h09EC : rd_rsp_data <= 32'h0000003F;
+                16'h09F0 : rd_rsp_data <= 32'h0000003F;
+                16'h09F8 : rd_rsp_data <= 32'h00000003;
+                16'h0A00 : rd_rsp_data <= 32'h0F710E00;
+                16'h0A04 : rd_rsp_data <= 32'h0000F3EA;
+                16'h0A08 : rd_rsp_data <= 32'h0A580040;
+                16'h0A0C : rd_rsp_data <= 32'h00A12A80;
+                16'h0A10 : rd_rsp_data <= 32'hCCF61C00;
+                16'h0A18 : rd_rsp_data <= 32'h00060428;
+                16'h0A20 : rd_rsp_data <= 32'hCCF58000;
+                16'h0A28 : rd_rsp_data <= 32'hCCF54000;
+                16'h0A34 : rd_rsp_data <= 32'h0C000000;
+                16'h0A3C : rd_rsp_data <= 32'h00000115;
+                16'h0A40 : rd_rsp_data <= 32'h57100F00;
+                16'h0A44 : rd_rsp_data <= 32'h00024F0E;
+                16'h0A50 : rd_rsp_data <= 32'h38CF0010;
+                16'h0A54 : rd_rsp_data <= 32'h01021160;
+                16'h0A64 : rd_rsp_data <= 32'h00500000;
+                16'h0A68 : rd_rsp_data <= 32'h0000F108;
+                16'h0A6C : rd_rsp_data <= 32'hF08000F3;
+                16'h0A70 : rd_rsp_data <= 32'h001F0021;
+                16'h0A74 : rd_rsp_data <= 32'h0000F0DC;
+                16'h0A78 : rd_rsp_data <= 32'h00000007;
+                16'h0A7C : rd_rsp_data <= 32'h00120000;
+                16'h0A80 : rd_rsp_data <= 32'h0004854A;
+                16'h0AB0 : rd_rsp_data <= 32'h00000001;
+                16'h0AB8 : rd_rsp_data <= 32'hD20179AD;
+                16'h0AD0 : rd_rsp_data <= 32'h32000021;
+                16'h0AD4 : rd_rsp_data <= 32'h0000000E;
+                16'h0AD8 : rd_rsp_data <= 32'h05F30000;
+                16'h0ADC : rd_rsp_data <= 32'h00DCFFE3;
+                16'h0AE0 : rd_rsp_data <= 32'h00002040;
+                16'h0AE4 : rd_rsp_data <= 32'hCCF51000;
+                16'h0AEC : rd_rsp_data <= 32'h0000003F;
+                16'h0AF0 : rd_rsp_data <= 32'h0000003F;
+                16'h0AF8 : rd_rsp_data <= 32'h00000003;
+                16'h0B00 : rd_rsp_data <= 32'h0F710E00;
+                16'h0B04 : rd_rsp_data <= 32'h0000F3EA;
+                16'h0B08 : rd_rsp_data <= 32'h0A580040;
+                16'h0B0C : rd_rsp_data <= 32'h00A12A80;
+                16'h0B10 : rd_rsp_data <= 32'hCCF61C00;
+                16'h0B18 : rd_rsp_data <= 32'h00060428;
+                16'h0B20 : rd_rsp_data <= 32'hCCF58000;
+                16'h0B28 : rd_rsp_data <= 32'hCCF54000;
+                16'h0B34 : rd_rsp_data <= 32'h0C000000;
+                16'h0B3C : rd_rsp_data <= 32'h00000115;
+                16'h0B40 : rd_rsp_data <= 32'h57100F00;
+                16'h0B44 : rd_rsp_data <= 32'h00024F0E;
+                16'h0B50 : rd_rsp_data <= 32'h38CF0010;
+                16'h0B54 : rd_rsp_data <= 32'h01021160;
+                16'h0B64 : rd_rsp_data <= 32'h00500000;
+                16'h0B68 : rd_rsp_data <= 32'h0000F108;
+                16'h0B6C : rd_rsp_data <= 32'hF08000F3;
+                16'h0B70 : rd_rsp_data <= 32'h001F0021;
+                16'h0B74 : rd_rsp_data <= 32'h0000F0DC;
+                16'h0B78 : rd_rsp_data <= 32'h00000007;
+                16'h0B7C : rd_rsp_data <= 32'h00120000;
+                16'h0B80 : rd_rsp_data <= 32'h0004854A;
+                16'h0BB0 : rd_rsp_data <= 32'h00000001;
+                16'h0BB8 : rd_rsp_data <= 32'hD20179AD;
+                16'h0BD0 : rd_rsp_data <= 32'h32000021;
+                16'h0BD4 : rd_rsp_data <= 32'h0000000E;
+                16'h0BD8 : rd_rsp_data <= 32'h05F30000;
+                16'h0BDC : rd_rsp_data <= 32'h00DCFFE3;
+                16'h0BE0 : rd_rsp_data <= 32'h00002040;
+                16'h0BE4 : rd_rsp_data <= 32'hCCF51000;
+                16'h0BEC : rd_rsp_data <= 32'h0000003F;
+                16'h0BF0 : rd_rsp_data <= 32'h0000003F;
+                16'h0BF8 : rd_rsp_data <= 32'h00000003;
+                16'h0C00 : rd_rsp_data <= 32'h0F710E00;
+                16'h0C04 : rd_rsp_data <= 32'h0000F3EA;
+                16'h0C08 : rd_rsp_data <= 32'h0A580040;
+                16'h0C0C : rd_rsp_data <= 32'h00A12A80;
+                16'h0C10 : rd_rsp_data <= 32'hCCF61C00;
+                16'h0C18 : rd_rsp_data <= 32'h00060428;
+                16'h0C20 : rd_rsp_data <= 32'hCCF58000;
+                16'h0C28 : rd_rsp_data <= 32'hCCF54000;
+                16'h0C34 : rd_rsp_data <= 32'h0C000000;
+                16'h0C3C : rd_rsp_data <= 32'h00000115;
+                16'h0C40 : rd_rsp_data <= 32'h57100F00;
+                16'h0C44 : rd_rsp_data <= 32'h00024F0E;
+                16'h0C50 : rd_rsp_data <= 32'h38CF0010;
+                16'h0C54 : rd_rsp_data <= 32'h01021160;
+                16'h0C64 : rd_rsp_data <= 32'h00500000;
+                16'h0C68 : rd_rsp_data <= 32'h0000F108;
+                16'h0C6C : rd_rsp_data <= 32'hF08000F3;
+                16'h0C70 : rd_rsp_data <= 32'h001F0021;
+                16'h0C74 : rd_rsp_data <= 32'h0000F0DC;
+                16'h0C78 : rd_rsp_data <= 32'h00000007;
+                16'h0C7C : rd_rsp_data <= 32'h00120000;
+                16'h0C80 : rd_rsp_data <= 32'h0004854A;
+                16'h0CB0 : rd_rsp_data <= 32'h00000001;
+                16'h0CB8 : rd_rsp_data <= 32'hD20179AD;
+                16'h0CD0 : rd_rsp_data <= 32'h32000021;
+                16'h0CD4 : rd_rsp_data <= 32'h0000000E;
+                16'h0CD8 : rd_rsp_data <= 32'h05F30000;
+                16'h0CDC : rd_rsp_data <= 32'h00DCFFE3;
+                16'h0CE0 : rd_rsp_data <= 32'h00002040;
+                16'h0CE4 : rd_rsp_data <= 32'hCCF51000;
+                16'h0CEC : rd_rsp_data <= 32'h0000003F;
+                16'h0CF0 : rd_rsp_data <= 32'h0000003F;
+                16'h0CF8 : rd_rsp_data <= 32'h00000003;
+                16'h0D00 : rd_rsp_data <= 32'h0F710E00;
+                16'h0D04 : rd_rsp_data <= 32'h0000F3EA;
+                16'h0D08 : rd_rsp_data <= 32'h0A580040;
+                16'h0D0C : rd_rsp_data <= 32'h00A12A80;
+                16'h0D10 : rd_rsp_data <= 32'hCCF61C00;
+                16'h0D18 : rd_rsp_data <= 32'h00060428;
+                16'h0D20 : rd_rsp_data <= 32'hCCF58000;
+                16'h0D28 : rd_rsp_data <= 32'hCCF54000;
+                16'h0D34 : rd_rsp_data <= 32'h0C000000;
+                16'h0D3C : rd_rsp_data <= 32'h00000115;
+                16'h0D40 : rd_rsp_data <= 32'h57100F00;
+                16'h0D44 : rd_rsp_data <= 32'h00024F0E;
+                16'h0D50 : rd_rsp_data <= 32'h38CF0010;
+                16'h0D54 : rd_rsp_data <= 32'h01021160;
+                16'h0D64 : rd_rsp_data <= 32'h00500000;
+                16'h0D68 : rd_rsp_data <= 32'h0000F108;
+                16'h0D6C : rd_rsp_data <= 32'hF08000F3;
+                16'h0D70 : rd_rsp_data <= 32'h001F0021;
+                16'h0D74 : rd_rsp_data <= 32'h0000F0DC;
+                16'h0D78 : rd_rsp_data <= 32'h00000007;
+                16'h0D7C : rd_rsp_data <= 32'h00120000;
+                16'h0D80 : rd_rsp_data <= 32'h0004854A;
+                16'h0DB0 : rd_rsp_data <= 32'h00000001;
+                16'h0DB8 : rd_rsp_data <= 32'hD20179AD;
+                16'h0DD0 : rd_rsp_data <= 32'h32000021;
+                16'h0DD4 : rd_rsp_data <= 32'h0000000E;
+                16'h0DD8 : rd_rsp_data <= 32'h05F30000;
+                16'h0DDC : rd_rsp_data <= 32'h00DCFFE3;
+                16'h0DE0 : rd_rsp_data <= 32'h00002040;
+                16'h0DE4 : rd_rsp_data <= 32'hCCF51000;
+                16'h0DEC : rd_rsp_data <= 32'h0000003F;
+                16'h0DF0 : rd_rsp_data <= 32'h0000003F;
+                16'h0DF8 : rd_rsp_data <= 32'h00000003;
+                16'h0E00 : rd_rsp_data <= 32'h0F710E00;
+                16'h0E04 : rd_rsp_data <= 32'h0000F3EA;
+                16'h0E08 : rd_rsp_data <= 32'h0A580040;
+                16'h0E0C : rd_rsp_data <= 32'h00A12A80;
+                16'h0E10 : rd_rsp_data <= 32'hCCF61C00;
+                16'h0E18 : rd_rsp_data <= 32'h00060428;
+                16'h0E20 : rd_rsp_data <= 32'hCCF58000;
+                16'h0E28 : rd_rsp_data <= 32'hCCF54000;
+                16'h0E34 : rd_rsp_data <= 32'h0C000000;
+                16'h0E3C : rd_rsp_data <= 32'h00000115;
+                16'h0E40 : rd_rsp_data <= 32'h57100F00;
+                16'h0E44 : rd_rsp_data <= 32'h00024F0E;
+                16'h0E50 : rd_rsp_data <= 32'h38CF0010;
+                16'h0E54 : rd_rsp_data <= 32'h01021160;
+                16'h0E58 : rd_rsp_data <= 32'h00005000;
+                16'h0E64 : rd_rsp_data <= 32'h00500000;
+                16'h0E68 : rd_rsp_data <= 32'h0000F108;
+                16'h0E6C : rd_rsp_data <= 32'hF08000F3;
+                16'h0E70 : rd_rsp_data <= 32'h001F0021;
+                16'h0E74 : rd_rsp_data <= 32'h0000F0DC;
+                16'h0E78 : rd_rsp_data <= 32'h00000007;
+                16'h0E7C : rd_rsp_data <= 32'h00120000;
+                16'h0E80 : rd_rsp_data <= 32'h0004854A;
+                16'h0EB0 : rd_rsp_data <= 32'h00000001;
+                16'h0EB8 : rd_rsp_data <= 32'hD20179AD;
+                16'h0ED0 : rd_rsp_data <= 32'h32000021;
+                16'h0ED4 : rd_rsp_data <= 32'h0000000E;
+                16'h0ED8 : rd_rsp_data <= 32'h05F30000;
+                16'h0EDC : rd_rsp_data <= 32'h00DCFFE3;
+                16'h0EE0 : rd_rsp_data <= 32'h00002040;
+                16'h0EE4 : rd_rsp_data <= 32'hCCF51000;
+                16'h0EEC : rd_rsp_data <= 32'h0000003F;
+                16'h0EF0 : rd_rsp_data <= 32'h0000003F;
+                16'h0EF8 : rd_rsp_data <= 32'h00000003;
+                16'h0F00 : rd_rsp_data <= 32'h0F710E00;
+                16'h0F04 : rd_rsp_data <= 32'h0000F3EA;
+                16'h0F08 : rd_rsp_data <= 32'h0A580040;
+                16'h0F0C : rd_rsp_data <= 32'h00A12A80;
+                16'h0F10 : rd_rsp_data <= 32'hCCF61C00;
+                16'h0F18 : rd_rsp_data <= 32'h00060428;
+                16'h0F20 : rd_rsp_data <= 32'hCCF58000;
+                16'h0F28 : rd_rsp_data <= 32'hCCF54000;
+                16'h0F34 : rd_rsp_data <= 32'h0C000000;
+                16'h0F3C : rd_rsp_data <= 32'h00000115;
+                16'h0F40 : rd_rsp_data <= 32'h57100F00;
+                16'h0F44 : rd_rsp_data <= 32'h00024F0E;
+                16'h0F50 : rd_rsp_data <= 32'h38CF0010;
+                16'h0F54 : rd_rsp_data <= 32'h01021160;
+                16'h0F64 : rd_rsp_data <= 32'h00500000;
+                16'h0F68 : rd_rsp_data <= 32'h0000F108;
+                16'h0F6C : rd_rsp_data <= 32'hF08000F3;
+                16'h0F70 : rd_rsp_data <= 32'h001F0021;
+                16'h0F74 : rd_rsp_data <= 32'h0000F0DC;
+                16'h0F78 : rd_rsp_data <= 32'h00000007;
+                16'h0F7C : rd_rsp_data <= 32'h00120000;
+                16'h0F80 : rd_rsp_data <= 32'h0004854A;
+                16'h0FB0 : rd_rsp_data <= 32'h00000001;
+                16'h0FB8 : rd_rsp_data <= 32'hD20179AD;
+                16'h0FD0 : rd_rsp_data <= 32'h32000021;
+                16'h0FD4 : rd_rsp_data <= 32'h0000000E;
+                16'h0FD8 : rd_rsp_data <= 32'h05F30000;
+                16'h0FDC : rd_rsp_data <= 32'h00DCFFE3;
+                16'h0FE0 : rd_rsp_data <= 32'h00002040;
+                16'h0FE4 : rd_rsp_data <= 32'hCCF51000;
+                16'h0FEC : rd_rsp_data <= 32'h0000003F;
+                16'h0FF0 : rd_rsp_data <= 32'h0000003F;
+                16'h0FF8 : rd_rsp_data <= 32'h00000003; // ↑
+                16'h1000 : rd_rsp_data <= 32'hFFFFFFFF; // the last response data ( W blackrobin, (it was at 00000000 when realtek is FFFFFFFF))
+                default : rd_rsp_data <= 32'hFFFFFFFF;  // realtek G
                     endcase
                 end
             endcase
         end else if (dwr_valid) begin
-            case (({dwr_addr[31:24], dwr_addr[23:16], dwr_addr[15:08], dwr_addr[07:00]} - (base_address_register & ~32'h4)) & 32'h00FF)
-                //8'h00 : data_32 <= dwr_data;
-                //8'h20 : data_32 <= dwr_data;
+             case (({dwr_addr[31:24], dwr_addr[23:16], dwr_addr[15:08], dwr_addr[07:00]} - (base_address_register & ~32'h4)) & 32'h00FF) //
             endcase
         end else begin
-            //rd_rsp_data <= 32'h00000000;  // default random value
                             rd_rsp_data[7:0]   <= ((0 + (number) % (15 + 1 - 0)) << 4) | (0 + (number + 3) % (15 + 1 - 0));
                             rd_rsp_data[15:8]  <= ((0 + (number + 6) % (15 + 1 - 0)) << 4) | (0 + (number + 9) % (15 + 1 - 0));
                             rd_rsp_data[23:16] <= ((0 + (number + 12) % (15 + 1 - 0)) << 4) | (0 + (number + 15) % (15 + 1 - 0));
@@ -953,4 +1409,3 @@ module pcileech_bar_impl_ar9287_wifi(
     end
 
 endmodule
-
