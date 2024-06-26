@@ -1,5 +1,7 @@
 # diviner-full-emu-v2
 
+also note : everything with // is sth i added so n1 needs to buy any shitware from diviner.
+
 
 for all the people asking how sh1t diviner is : 
 
