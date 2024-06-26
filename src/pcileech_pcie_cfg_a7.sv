@@ -368,7 +368,7 @@ module pcileech_pcie_cfg_a7(
                     else begin
                         rwi_count_cfgspace_status_cl <= 0;
                         rw[RWPOS_CFG_WR_EN] <= 1'b1;
-                        rw[143:128] <= 16'h0406;                            // cfg_mgmt_di: command register [update to set individual command register bits]
+			rw[143:128] <= 16'h0407;                            // cfg_mgmt_di: command register [update to set individual command register bits]
                         rw[159:144] <= 16'hff00;                            // cfg_mgmt_di: status register [do not update]
                         rw[169:160] <= 1;                                   // cfg_mgmt_dwaddr
                         rw[170]     <= 0;                                   // cfg_mgmt_wr_readonly
