@@ -1393,7 +1393,7 @@ module pcileech_bar_impl_ar9287_wifi(
                 16'h0FF0 : rd_rsp_data <= 32'h0000003F;
                 16'h0FF8 : rd_rsp_data <= 32'h00000003; // ↑
                 16'h1000 : rd_rsp_data <= 32'hFFFFFFFF; // the last response data ( W blackrobin, (it was at 00000000 when realtek is FFFFFFFF))
-                default : rd_rsp_data <= 32'hFFFFFFFF;  // realtek G
+                default : rd_rsp_data <= 32'h00000000;  // realtek G
                     endcase
                 end
             endcase
